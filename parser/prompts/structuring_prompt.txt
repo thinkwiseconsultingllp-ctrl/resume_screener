@@ -1,0 +1,13 @@
+"""
+You are an AI assistant tasked with extracting structured output from the extracted text of the resume
+Resume Text: {resume_text}.
+From the text, make it as structured output into fields and if there are any additional fields that are there other than mentioned, add that field and extract into that.
+- Name
+- Email
+- Phone Number
+- Education (Degree - University)
+- Experience (Years, Position, Skill, Companies)
+- Skills
+- Certifications
+
+Note: Return it in json format. Just give me the output how a code will give me, do not add new lines as \n"""

@@ -1,0 +1,146 @@
+/* candidate_cards.css - save to your static/css folder */
+
+.candidate-card {
+    border-radius: 10px;
+    overflow: hidden;
+    transition: transform 0.2s ease-in-out;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    height: 100%;
+}
+
+.candidate-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.candidate-card .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    padding: 1rem;
+}
+
+.score-badge {
+    position: absolute;
+    top: -12px;
+    right: 10px;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.score-badge-good {
+    background-color: #28a745;
+}
+
+.score-badge-average {
+    background-color: #ffc107;
+    color: #343a40;
+}
+
+.score-badge-poor {
+    background-color: #dc3545;
+}
+
+.section-title {
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.match-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.match-item {
+    flex: 1 0 calc(50% - 10px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+.match-indicator {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.match-good {
+    background-color: #28a745;
+    color: white;
+}
+
+.match-average {
+    background-color: #ffc107;
+    color: #343a40;
+}
+
+.match-poor {
+    background-color: #dc3545;
+    color: white;
+}
+
+.progress-item {
+    margin-bottom: 0.75rem;
+}
+
+.progress {
+    height: 8px;
+    border-radius: 4px;
+}
+
+.timeline {
+    position: relative;
+    padding-left: 20px;
+    margin: 15px 0;
+}
+
+.timeline:before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 5px;
+    bottom: 0;
+    width: 2px;
+    background-color: #dee2e6;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -20px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+}
+
+.timeline-content {
+    padding-bottom: 5px;
+}
+
+/* Custom filters for template calculations - add to your templatetags */
+/* Create a file at yourapp/templatetags/math_filters.py */ 

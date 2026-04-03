@@ -1,0 +1,60 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Resume Comparison Results</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 py-6" style="font-family: Cambria">
+  <div class="container mx-auto px-4">
+<div class="mb-8 items-center justify-between flex">
+  <h1 class="mb-4 text-4xl font-bold text-center w-full" style="color: #28a745">Comparison Results</h1>
+  <div class="flex space-x-2 absolute right-0">
+    <a href="{% url 'download_results' 'excel' %}" class="mr-2 rounded-xl border border-green-600 bg-white px-4 py-2 font-semibold text-green-700 transition hover:bg-green-200"> Download Excel </a>
+    <a href="{% url 'download_results' 'json' %}" class="rounded-xl border border-green-600 bg-white px-4 py-2 font-semibold text-green-700 transition hover:bg-green-100"> Download JSON </a>
+  </div>
+</div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for result,resume in results %}
+        <div class="bg-white rounded-2xl shadow-lg p-6 transition duration-300 hover:scale-110 shadow-4xl --tw-shadow-color: var(--color-green-50)">
+            <h2 class="text-xl font-bold mb-1">{{ resume.Name }}</h2>
+    <p class="text-sm text-gray-600 mb-3">{{ resume.Email }}</p>
+        <div>
+        <p style="text-align: justify;text-justify:inter-word"><strong>Candidate Snapshot: </strong>{{ result.candidate_snapshot}}</p>
+        </div>
+
+
+        <p><strong>Total Experience:</strong> {{ result.career_details.Total_Years_of_Experience }} </p>
+        <p><strong>Experience Match:</strong>{{ result.evaluation.Experience_Match }}%</p>
+          <p><strong>Skills Match:</strong> {{ result.evaluation.Skills_Match}}%</p>
+          <p><strong>Domain Match:</strong> {{ result.domain}}</p>
+          <p><strong>Measurable Impact:</strong> {{ result.evaluation.Measurable_Impact}}%</p>
+            <p><strong>Matching Skills:</strong> {{ result.matched_skills|join:"," }}</p>
+            <p><strong>Missing skills:</strong>
+                {% if result.missing_skills|length > 0 %}
+                {{ result.missing_skills|join:"," }}
+            {% else %} None
+            {% endif %}</p>
+            <p><strong>Education Requirement:</strong> {{ result.education_match }}</p>
+            <p><strong>Locality:</strong> {{ result.locality }}</p>
+
+          <div class="my-4">
+    <p class="font-bold text-lg">Score:
+            <span class="text-purple-600 text-xl font-extrabold">
+                {{ result.evaluation.Total_score}}
+            </span>
+    </p>
+    <p class="text-sm text-gray-500 italic">
+        {{ result.rating|default:"" }}
+    </p>
+</div>
+
+        </div>
+    {% endfor %}
+    </div>
+  </div>
+</body>
+</html>

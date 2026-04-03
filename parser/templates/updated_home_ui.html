@@ -1,0 +1,498 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Resume Matcher</title>
+  <link rel="icon" href="{% static 'images/thinkwise_symbol_transparent.png' %}" type="image/x-icon">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+     Adopt new_results green brand, Cambria typography, and card styling 
+    :root { --brand: #28a745; --brand-ink: #1f8a37; }
+    body { font-family: Cambria, Georgia, serif; }
+
+    /* Tabs (JD tabs preserved), switch to green brand */
+    .tabs { display: flex; margin-bottom: 0.75rem; border-bottom: 1px solid #e5e7eb; }
+    .tab { padding: 0.6rem 1.0rem; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s ease; font-weight: 600; color: #374151; }
+    .tab:hover { color: var(--brand-ink); }
+    .tab.active { border-bottom: 2px solid #28a745; color: var(--brand); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* New: Separate resume tabs so JD tabs logic remains unchanged */
+    .resume-tabs { display: flex; margin-bottom: 0.75rem; border-bottom: 1px solid #e5e7eb; }
+    .resume-tab { padding: 0.6rem 1.0rem; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s ease; font-weight: 600; color: #374151; }
+    .resume-tab:hover { color: var(--brand-ink); }
+    .resume-tab.active { border-bottom: 2px solid #28a745; color: var(--brand); }
+    .resume-tab-content { display: none; }
+    .resume-tab-content.active { display: block; }
+
+    /* Buttons match new_results */
+    .button-81 {
+      background-color: #fff;
+      border: 2px solid black;
+      border-color: #b0c4f7;
+      border-radius: 0.9rem;
+      color: #111827;
+      cursor: pointer;
+      display: inline-block;
+      font-family: inherit;
+      font-size: 1.1rem;
+      font-weight: 700;
+      line-height: 1;
+      padding: 0.75rem 2.25rem;
+      text-align: center;
+      transition: all 0.18s ease-in-out;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+      user-select: none;
+    }
+    .button-81:hover:enabled { background-color: rgba(8, 176, 47, 0.782); color: #ffffff; border-color: #9ad1e8; transform: translateY(-1px); }
+    .button-81:disabled { opacity: 0.6; cursor: not-allowed; border-color: #21375e; color: #6b7280; }
+
+    /* Inputs and cards */
+    .field-card { background: #fff; border-radius: 0.75rem; box-shadow: 0 6px 24px rgba(0,0,0,0.08); padding: 1.25rem; will-change: transform, box-shadow; transition: box-shadow 220ms ease, transform 220ms ease; }
+    .field-card:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,0.10); }
+
+    @keyframes fade-up {
+      0% { opacity: 0; transform: translateY(8px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-up { animation: fade-up 420ms ease-out both; }
+
+    /* Fancy field wrapper for the 4 additional inputs */
+    .fancy-field {
+      background: #fff;
+      border-radius: 0.75rem;
+      border: 1px solid #e5e7eb;
+      padding: 0.75rem;
+      transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+    }
+    .fancy-field:focus-within {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(40,167,69,0.15);
+      transform: translateY(-1px);
+    }
+    .fancy-field label { display: inline-block; transition: color 160ms ease, transform 160ms ease, opacity 160ms ease; }
+    .fancy-field:focus-within label { color: var(--brand); transform: translateY(-1px); opacity: 0.95; }
+
+    /* Button focus-visible */
+    .button-81:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(8, 176, 47, 0.782);
+      transform: translateY(-1px);
+    }
+
+    /* Smooth show/hide for collapsible sections (uploadOptions, buttons) */
+    .collapse-base {
+      overflow: hidden;
+      transition: opacity 260ms ease, max-height 300ms ease, transform 260ms ease;
+    }
+    
+    .collapse-hidden {
+      opacity: 0;
+      max-height: 0;
+      pointer-events: none;
+      transform: translateY(6px);
+    }
+    .collapse-shown {
+      opacity: 1;
+      max-height: 1200px; /* comfortably large */
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    /* Loading spinner brand color */
+    #some { border-color: rgb(189, 50, 248); border-right-color: transparent; }
+  </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen p-6 md:p-10">
+  <div class="absolute top-4 left-6 z-50">
+    <img src="{% static 'images/thinkwise_logo_transparent.png' %}" alt="Thinkwise Logo" class="w-44 opacity-60">
+  </div>
+
+  <header class="max-w-5xl mx-auto mb-6 md:mb-8 text-center">
+    <h1 class="text-3xl md:text-4xl font-extrabold" style="color: #28a745;">AI Resume Matcher</h1>
+  </header>
+
+  <main class="max-w-5xl mx-auto bg-white rounded-xl shadow-xl">
+    <form method="POST" enctype="multipart/form-data" class="p-5 md:p-8">
+      {% csrf_token %}
+
+      {% comment %} Display form errors at the top {% endcomment %}
+      {% if form.non_field_errors %}
+        <div class="mb-6">
+          <div class="p-3 rounded-lg bg-red-100 text-red-700">
+            {{ form.non_field_errors }}
+          </div>
+        </div>
+      {% endif %}
+
+      {# Display messages (success, error, info) #}
+      {% if messages %}
+        <div class="mb-6">
+          {% for message in messages %}
+            <div class="p-3 rounded-lg
+                        {% if message.tags == 'error' %} bg-red-100 text-red-700
+                        {% elif message.tags == 'success' %} bg-green-100 text-green-700
+                        {% else %} bg-yellow-100 text-yellow-700 {% endif %}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <section class="space-y-3">
+          <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-bold" style="color: #28a745;">Job Description</h2>
+          </div>
+          <p class="hint">Write/Copy-Paste the job description or upload a file.</p>
+
+          <div class="field-card animate-fade-up">
+            <div class="tabs">
+              <div class="tab active" data-tab="jd-text-tab">Paste JD</div>
+              <div class="tab" data-tab="jd-file-tab">Upload File</div>
+            </div>
+
+            <div id="jd-text-tab" class="tab-content active">
+              <div class="relative w-full min-w-[200px]">
+                {{ form.jd_text }}
+                <label
+                  for="{{ form.jd_text.id_for_label }}"
+                  class="pointer-events-none absolute left-0 -top-1.5 flex h-full w-full select-none text-[11px] font-normal leading-tight text-gray-400 transition-all
+                         peer-placeholder-shown:text-sm peer-placeholder-shown:leading-[3.75] peer-placeholder-shown:text-gray-500
+                         peer-focus:text-[11px] peer-focus:leading-tight peer-focus:text-green-600">
+                  Job Description
+                </label>
+              </div>
+            <p class="text-xs text-gray-500 mt-2">Copy and Paste the Job description text</p>
+            </div>
+
+            <div id="jd-file-tab" class="tab-content">
+              <div class="border border-dashed border-gray-300 p-4 rounded-lg text-center bg-white hover:bg-gray-50 transition">
+                <input id="id_job_description_file" name="jd_file" type="file" class="hidden" onchange="showFileName(this, 'jd-file-name')" />
+                <label for="id_job_description_file" class="cursor-pointer">
+                  <div class="flex flex-col items-center space-y-2">
+                    <p class="text-gray-600">Click to select a job description file</p>
+                    <button type="button" onclick="document.getElementById('id_job_description_file').click()" class="mt-2 px-4 py-2 bg-white text-[color:var(--brand)] rounded border border-[color:var(--brand)] hover:bg-[color:var(--brand)] hover:text-white transition">
+                      Choose File
+                    </button>
+                    <span id="jd-file-name" class="text-sm text-gray-500"></span>
+                  </div>
+                </label>
+                <p class="text-sm mt-1 text-gray-500">PDF, DOC, DOCX files are supported.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="space-y-3">
+          <h2 class="text-2xl font-bold" style="color: #28a745;">Compare Resumes</h2>
+          <p class="hint">Select a source to compare resumes.</p>
+
+          <div class="field-card">
+            <div class="resume-tabs">
+              <div class="resume-tab active" data-resume-tab="resume-text-tab">Paste Resume</div>
+              <div class="resume-tab" data-resume-tab="resume-file-tab">Upload Files</div>
+            </div>
+          
+
+          <div id="resume-text-tab" class="resume-tab-content active">
+            <div class="relative w-full min-w-[200px]">
+              {{ form.resume_text }}
+              <label
+                for="{{ form.resume_text.id_for_label }}"
+                class="pointer-events-none absolute left-0 -top-1.5 flex h-full w-full select-none text-[11px] font-normal leading-tight text-gray-400 transition-all
+                       peer-placeholder-shown:text-sm peer-placeholder-shown:leading-[3.75] peer-placeholder-shown:text-gray-500
+                       peer-focus:text-[11px] peer-focus:leading-tight peer-focus:text-green-600">
+                Resume Text
+              </label>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">Paste a single candidate resume here for quick comparison.</p>
+          </div>
+
+          <div id="resume-file-tab" class="resume-tab-content">
+            <div class="mb-4">
+              <p class="text-xs text-gray-500 mt-2">Choose whether to compare with uploaded resumes or database records.</p>
+              <select
+                name="{{ form.source_choice.html_name }}"
+                id="source_choice_select"
+                class="block w-full px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--brand)] focus:border-[color:var(--brand)]">
+                <option value="" disabled selected hidden>Select source</option>
+                {% for val, label in form.source_choice.field.choices %}
+                  <option value="{{ val }}" {% if form.source_choice.value == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div id="file-upload-section" class="collapse-base collapse-hidden">
+              <input
+                id="id_resumes"
+                name="resume_files"
+                type="file"
+                multiple
+                onchange="showMultipleFileNames(this, 'resume-file-names')"
+                class="mt-1 block w-full text-sm text-gray-700
+                       file:mr-4 file:py-2 file:px-4 file:rounded file:border-0
+                       file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+              />
+              <span id="resume-file-names" class="text-xs text-gray-500 block mt-1"></span>
+              <p class="text-xs text-gray-500 mt-2">PDF, DOC, DOCX supported. You can upload multiple files.</p>
+              <label class="inline-flex items-center mt-3">
+                <input type="checkbox" name="insert_to_db" class="form-checkbox h-5 w-5 text-green-600">
+                <span class="ml-2 text-sm text-gray-600">Store Resume Data</span>
+              </label>
+            </div>
+
+            <div id="database-message" class="collapse-base collapse-hidden">
+              <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <p class="text-sm text-blue-700">Resumes will be compared against your existing database records.</p>
+              </div>
+            </div>
+          </div>
+          </div>
+        </section>
+      </div>
+
+      <section class="mt-8">
+        <div class="field-card animate-fade-up">
+          <h3 class="text-xl font-bold mb-4" style="color: #28a745;">Additional Preferences</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="fancy-field">
+              <label for="must_have_skills_id" class="text-sm font-medium text-gray-700">Must-have Skills</label>
+              {{ form.must_have_skills }}
+            </div>
+            <div class="fancy-field">
+              <label for="nice_to_have_skills_id" class="text-sm font-medium text-gray-700">Nice-to-have Skills</label>
+              {{ form.nice_to_have_skills }}
+            </div>
+            <div class="fancy-field">
+              <label for="min_experience_id" class="text-sm font-medium text-gray-700">Minimum Experience (Years)</label>
+              {{ form.min_experience }}
+            </div>
+            <div class="fancy-field">
+              <label for="role_expectations_id" class="text-sm font-medium text-gray-700">Role Expectations</label>
+              {{ form.role_expectations }}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Added missing submit buttons section -->
+      <section class="mt-8">
+          <div class="flex justify-center space-x-4">
+            <!-- Default submit button for upload source -->
+            <div id="defaultSubmitButton" class="collapse-base">
+              <button type="submit" class="button-81" disabled>
+                Compare Resumes
+              </button>
+            </div>
+            
+            <!-- Compare button for database source -->
+            <!-- <div id="compareButton" class="collapse-base collapse-hidden">
+              <button type="submit" name="compare_db" value="1" class="button-81" disabled>
+                Compare with Database
+              </button>
+          </div> -->
+        </div>
+      </section>
+    </form>
+  </main>
+
+  <div id="loadingScreen" class="fixed inset-0 bg-white bg-opacity-100 flex justify-center hidden items-center flex-col text-center space-y-6">
+    <div id="some" class="animate-spin rounded-full h-40 w-40 border-t-4 border-green-500 border-solid"></div>
+    <div class="space-y-2 text-lg font-medium text-green-700">
+      <p id="loadingText">Initialising...</p>
+    </div>
+  </div>
+
+  <script>
+    const jdTabs = document.querySelectorAll(".tabs .tab");
+    jdTabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        jdTabs.forEach(t => t.classList.remove("active"));
+        document.querySelectorAll("#jd-text-tab, #jd-file-tab").forEach(c => c.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById(tab.getAttribute("data-tab")).classList.add("active");
+        validateForm();
+      });
+    });
+
+    const resumeTabs = document.querySelectorAll(".resume-tabs .resume-tab");
+    resumeTabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        resumeTabs.forEach(t => t.classList.remove("active"));
+        document.querySelectorAll("#resume-text-tab, #resume-file-tab").forEach(c => c.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById(tab.getAttribute("data-resume-tab")).classList.add("active");
+        validateForm();
+      });
+    });
+
+    function showFileName(input, spanId) {
+      const fileSpan = document.getElementById(spanId);
+      fileSpan.innerText = input.files.length > 0 ? input.files[0].name : "";
+      validateForm();
+    }
+
+    function showMultipleFileNames(input, spanId) {
+      const fileSpan = document.getElementById(spanId);
+      fileSpan.innerHTML = ''; // Clear previous content
+      
+      if (input.files.length > 0) {
+        const filesContainer = document.createElement('div');
+        filesContainer.className = 'flex flex-wrap gap-2 mt-2';
+        
+        Array.from(input.files).forEach((file, index) => {
+          const fileTile = document.createElement('div');
+          fileTile.className = 'inline-flex items-center bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm border border-green-200';
+          fileTile.innerHTML = `
+            <span class="truncate max-w-32">${file.name}</span>
+            <button type="button" onclick="removeFile(${index}, '${spanId}')" class="ml-2 text-green-600 hover:text-red-600 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          `;
+          filesContainer.appendChild(fileTile);
+        });
+        
+        fileSpan.appendChild(filesContainer);
+      }
+      validateForm();
+    }
+
+    function removeFile(index, spanId) {
+      const input = document.getElementById("id_resumes");
+      const dt = new DataTransfer();
+      
+      Array.from(input.files).forEach((file, i) => {
+        if (i !== index) {
+          dt.items.add(file);
+        }
+      });
+      
+      input.files = dt.files;
+      showMultipleFileNames(input, spanId);
+    }
+
+    const sourceSelect   = document.getElementById("source_choice_select");
+    const resumeFiles    = document.getElementById("resume-file-tab");
+    const jdFile         = document.getElementById("jd-file-tab").querySelector("input[type='file']");
+    const jdTextarea     = document.getElementById("jd-text-tab").querySelector("textarea");
+    const resumeTextarea = document.getElementById("resume-text-tab").querySelector("textarea");
+    const fileUploadSection = document.getElementById("file-upload-section");
+    const databaseMessage = document.getElementById("database-message");
+    const resumesInput    = document.getElementById("id_resumes");
+
+    function showCollapse(el) {
+      el.classList.remove("collapse-hidden");
+      el.classList.add("collapse-shown");
+    }
+    function hideCollapse(el) {
+      el.classList.remove("collapse-shown");
+      el.classList.add("collapse-hidden");
+    }
+
+    function toggleSections() {
+      const value = sourceSelect.value;
+      const isUpload = value === "upload";
+      const isDB = value === "database";
+
+      if (isUpload) {
+        showCollapse(fileUploadSection);
+      } else {
+        hideCollapse(fileUploadSection);
+      }
+
+      if (isDB) {
+        showCollapse(databaseMessage);
+      } else {
+        hideCollapse(databaseMessage);
+      }
+    }
+
+    function validateForm() {
+      const source = sourceSelect.value;
+      const hasJdText = (jdTextarea && jdTextarea.value.trim().length > 0) || false;
+      const hasJdFile = (jdFile && jdFile.files.length > 0) || false;
+      const hasJD = hasJdText || hasJdFile;
+      
+      const hasResumeText = (resumeTextarea && resumeTextarea.value.trim().length > 0) || false;
+      let hasResumeFiles = false;
+      if(source === 'upload') {   
+          hasResumeFiles = !!(resumesInput && resumesInput.files && resumesInput.files.length > 0);
+          console.log("Resume Files Present:", hasResumeFiles);
+      } else if(source === 'database') {
+        hasResumeFiles = true; // Bypass file requirement for database source
+      } else {
+        hasResumeFiles = false;
+      }
+
+      let isValid = false;
+      const compareWrap = document.getElementById("compareButton");
+      const submitWrap = document.getElementById("defaultSubmitButton");
+      const compareBtnEl = compareWrap ? compareWrap.querySelector("button") : null;
+      const defaultBtnEl = submitWrap.querySelector("button");
+      
+      if (hasJD && (hasResumeText || hasResumeFiles)){
+        console.log("Yes, coming here")
+        isValid = true;
+        defaultBtnEl.disabled = !isValid;
+        console.log("Yes, coming here")
+        showCollapse(submitWrap);
+      } else {
+        defaultBtnEl.disabled = true;
+        compareBtnEl.disabled = true;
+        
+        showCollapse(submitWrap);
+        hideCollapse(compareWrap);
+      }
+    }
+
+    // Event listeners
+    sourceSelect.addEventListener("change", () => {
+      toggleSections();
+      validateForm();
+    });
+
+    [resumeFiles, jdFile, jdTextarea, resumeTextarea].forEach(el => {
+      if (el) {
+        el.addEventListener("input", validateForm);
+        el.addEventListener("change", validateForm);
+      }
+    });
+
+    // Ensure first paint uses animations properly
+    window.addEventListener("DOMContentLoaded", () => {
+      toggleSections();
+      validateForm();
+    });
+
+    // Loading copy (same behavior, brand tone)
+    const loadingMessages = [
+      "Initialising...",
+      "Sending the files...",
+      "Understanding the job description...",
+      "Retrieving Resume information...",
+      "Performing comparison...",
+      "Optimizing candidate data...",
+      "Evaluating skill match...",
+      "Summarizing insights..."
+    ];
+    const loadingText = document.getElementById('loadingText');
+    let index = 0;
+    setInterval(() => {
+      loadingText.textContent = loadingMessages[index];
+      index = (index + 1) % loadingMessages.length;
+    }, 2000);
+
+    document.querySelector("form").addEventListener("submit", function () {
+      console.log("Form submitted, showing loading screen.");
+      const loading = document.getElementById("loadingScreen");
+      loading.classList.remove("hidden");
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,373 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Resume Comparison Results</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script type="text/javascript"
+    src="https://gc.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=8e6Sn3YZyQjthHeXiHPGlpNxd6l2kICqZmWl620a2JB1IMrwBtLqGQT7CxFuQthh-xjBgyvveyIRNGA4vGvNGlQAb8DNSvJnWb-AUSOf_xTcP-84HNXairx3KORPiOZCcdHF3nQXbHTNUvqR_BD4xT6nBRQ_qq6Uzeqyq0uveQc2EIhqBX_uMxudSlfMC-AVaXhssGmiky-dx1j2pHWPxaYPDa7ZvIugpx8KFMGYlCVjukVUrUtEbbRL2ywsmwbhIUSvmkYkbODSynUYpAjrUg"
+    charset="UTF-8"></script>
+  <style>
+    .circular-progress {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: conic-gradient(#4ade80 var(--progress), #e5e7eb var(--progress));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .circular-progress::before {
+      content: '';
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: white;
+      position: absolute;
+    }
+
+    .progress-text {
+      position: relative;
+      z-index: 1;
+      font-weight: bold;
+      font-size: 16px;
+      font-family: Cambria;
+      color: #cc31ef;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .modal.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background-color: white;
+      padding: 30px;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+      animation: slideIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateY(-50px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #666;
+      transition: color 0.3s;
+    }
+
+    .close-btn:hover {
+      color: #e82020;
+    }
+
+    .welcome-popup {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #28a745, #20c997);
+      color: white;
+      padding: 15px 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      z-index: 1001;
+      animation: slideInRight 0.5s ease-out;
+      max-width: 300px;
+      font-size: 14px;
+    }
+
+    .welcome-popup .close-popup {
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      opacity: 0.8;
+      transition: opacity 0.3s;
+    }
+
+    .welcome-popup .close-popup:hover {
+      opacity: 1;
+    }
+
+    .welcome-popup.hide {
+      animation: slideOutRight 0.5s ease-in forwards;
+    }
+
+    @keyframes slideInRight {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideOutRight {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+
+    .pulse-hint {
+      animation: pulseHint 2s infinite;
+    }
+
+    @keyframes pulseHint {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.02);
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 py-6" style="font-family: Cambria">
+  <div class="absolute top-4 left-6 z-50">
+    <img src="{% static 'images/thinkwise_logo_transparent.png' %}" alt="Thinkwise Logo" class="w-48 opacity-60">
+  </div>
+  <!-- Welcome Popup -->
+  <div id="welcomePopup" class="welcome-popup">
+    <button class="close-popup" onclick="closeWelcomePopup()">&times;</button>
+    <div class="flex items-center mb-2">
+      <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd"
+          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+          clip-rule="evenodd"></path>
+      </svg>
+      <strong>Quick Tip!</strong>
+    </div>
+    <p>Click on any candidate card to view detailed information in a popup window.</p>
+  </div>
+  <div class="container mx-auto px-4">
+    <div class="mb-8 items-center justify-between flex">
+      <h1 class="mb-4 text-4xl font-bold text-center w-full" style="color: #28a745">Comparison Results</h1>
+      <div class="flex space-x-2 absolute right-0">
+        <a href="{% url 'download_results' 'excel' %}"
+          class="mr-2 rounded-xl border border-green-600 bg-white px-4 py-2 font-semibold text-green-700 transition hover:bg-green-200">
+          Download Excel </a>
+        <a href="{% url 'download_results' 'json' %}"
+          class="rounded-xl border border-green-600 bg-white px-4 py-2 font-semibold text-green-700 transition hover:bg-green-100">
+          Download JSON </a>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for result,resume in results %}
+      <div
+        class="bg-white rounded-lg shadow-lg p-6 cursor-pointer transition duration-300 hover:shadow-xl hover:scale-105"
+        onclick="openModal('modal-{{ forloop.counter }}')">
+        <div class="flex justify-between items-start">
+          <!-- Left side content -->
+          <div class="flex-1">
+            <h2 class="text-xl font-bold mb-1">{{ resume.Name }}</h2>
+            <p class="text-sm text-gray-600 mb-4 italic">{{ resume.Email }}</p>
+
+            <div class="space-y-2 text-sm">
+              <p><strong>Total Experience:</strong> {{ result.career_details.total_years_of_experience }}</p>
+              <p><strong>Skill Match:</strong> {{ result.evaluation.skills_match }}%</p>
+              <p><strong>Missing Skills:</strong>
+                {% if result.missing_skills|length > 0 %}
+                {{ result.missing_skills|slice:":2"|join:", " }}{% if result.missing_skills|length > 2 %}...{% endif %}
+                {% else %}
+                None
+                {% endif %}
+              </p>
+              <p><strong>Measurable Impact:</strong> {{ result.evaluation.measurable_impact }}%</p>
+            </div>
+          </div>
+
+          <!-- Right side - Circular progress -->
+          <div class="flex flex-col items-center ml-4">
+            <div class="circular-progress" style="--progress: {{ result.evaluation.Total_score }}%">
+              <span class="progress-text">{{ result.evaluation.total_score }}%</span>
+            </div>
+            <p class="text-sm font-semibold mt-2 text-center">{{ result.rating|default:"Rating" }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal for detailed view -->
+      <div id="modal-{{ forloop.counter }}" class="modal" onclick="closeModal('modal-{{ forloop.counter }}')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+          <span class="close-btn" onclick="closeModal('modal-{{ forloop.counter }}')">&times;</span>
+
+          <h2 class="text-2xl font-bold mb-2" style="color: #28a745">{{ resume.Name }}</h2>
+          <p class="text-gray-600 mb-4">{{ resume.Email }}</p>
+
+          <div class="mb-6">
+            <p style="text-align: justify;text-justify:inter-word"><strong>Candidate Snapshot: </strong>{{result.candidate_snapshot}}</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+              <p class="mb-2"><strong>Total Experience:</strong> {{ result.career_details.total_years_of_experience }}
+              </p>
+              <p class="mb-2"><strong>Experience Match:</strong> {{ result.evaluation.experience_match }}%</p>
+              <p class="mb-2"><strong>Skills Match:</strong> {{ result.evaluation.skills_match }}%</p>
+              <p class="mb-2"><strong>Domain Match:</strong> {{ result.domain }}</p>
+              <p class="mb-2"><strong>Measurable Impact:</strong> {{ result.evaluation.measurable_impact }}%</p>
+            </div>
+            <div>
+              <p class="mb-2"><strong>Education Requirement:</strong> {{ result.education_match }}</p>
+              <p class="mb-2"><strong>Locality:</strong> {{ result.locality }}</p>
+              <div class="mt-4">
+                <p class="font-bold text-lg">Overall Score:
+                  <span class="text-purple-600 text-xl font-extrabold">{{ result.evaluation.total_score }}%</span>
+                </p>
+                <p class="text-sm text-gray-500 italic">{{ result.rating|default:"" }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <p class="mb-2"><strong>Matching Skills:</strong></p>
+            <p class="text-sm bg-green-50 p-3 rounded">{{ result.matched_skills|join:", " }}</p>
+          </div>
+
+          <div>
+            <p class="mb-2"><strong>Missing Skills:</strong></p>
+            <p class="text-sm bg-red-50 p-3 rounded">
+              {% if result.missing_skills|length > 0 %}
+              {{ result.missing_skills|join:", " }}
+              {% else %}
+              None
+              {% endif %}
+            </p>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <!-- Go to Home Button -->
+<div class="flex justify-center mt-8">
+  <a href="{% url 'home' %}"
+     class="rounded-xl border border-blue-600 bg-white px-6 py-3 font-semibold text-blue-700 transition hover:bg-blue-200">
+     Go to Home
+  </a>
+</div>
+
+  <script>
+    function openModal(modalId) {
+      document.getElementById(modalId).classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('show');
+      document.body.style.overflow = 'auto';
+    }
+
+    // Close modal when pressing Escape key
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') {
+        const openModal = document.querySelector('.modal.show');
+        if (openModal) {
+          openModal.classList.remove('show');
+          document.body.style.overflow = 'auto';
+        }
+      }
+    });
+
+    // Welcome popup functionality
+    function closeWelcomePopup() {
+      const popup = document.getElementById('welcomePopup');
+      popup.classList.add('hide');
+      setTimeout(() => {
+        popup.style.display = 'none';
+      }, 500);
+      localStorage.setItem('welcomePopupShown', 'true');
+    }
+
+    // Show welcome popup on page load
+    window.addEventListener('load', function () {
+      const hasSeenPopup = localStorage.getItem('welcomePopupShown');
+      if (!hasSeenPopup) {
+        // Auto-close after 5 seconds
+        setTimeout(() => {
+          const popup = document.getElementById('welcomePopup');
+          if (popup && !popup.classList.contains('hide')) {
+            closeWelcomePopup();
+          }
+        }, 5000);
+
+        // Add pulse effect to first few cards as hint
+        const cards = document.querySelectorAll('.bg-white.rounded-lg.shadow-lg');
+        cards.forEach((card, index) => {
+          if (index < 3) {
+            card.classList.add('pulse-hint');
+            setTimeout(() => {
+              card.classList.remove('pulse-hint');
+            }, 6000);
+          }
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>

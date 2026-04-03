@@ -1,0 +1,12 @@
+"""
+You are an AI assistant tasked with extracting structured output from the extracted text of the Job description
+Job description Text: {jd_text}.
+From the text, make it as structured output into fields and if there are any additional fields that are there other than mentioned, add that field and extract into that.
+- Job Role
+- Must Have Skills
+- Good to have skills
+- Education required (if not mentioned say "Not Mentioned")
+- Experience (Years)
+- Skills
+
+Note: Return it in json format. Just give me the output how a code will give me, do not add new lines as \n"""
