@@ -42,6 +42,11 @@ INSTALLED_APPS = [
     'parser',
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://resumescreener-production-6e5a.up.railway.app',
+    'https://*.railway.app'
+]
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -129,7 +134,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'parser/media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CSRF_COOKIE_SECURE = False
-SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 SECURE_SSL_REDIRECT = False
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True

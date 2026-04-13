@@ -8,10 +8,14 @@ import io
 import zipfile
 from pdf2image import convert_from_path
 import hashlib
+import shutil
 
 RESOLUTION=300
 MIN_OCR_CHARS=20
-pytesseract.pytesseract.tesseract_cmd = r'C:/Program Files/Tesseract-OCR/tesseract.exe'
+# pytesseract.pytesseract.tesseract_cmd = r'C:/Program Files/Tesseract-OCR/tesseract.exe'
+tesseract_path = shutil.which("tesseract")
+if tesseract_path:
+    pytesseract.pytesseract.tesseract_cmd = tesseract_path
 
 # Extracting text from pdfs using pdfplumber
 def pdf_extraction(file_path):
