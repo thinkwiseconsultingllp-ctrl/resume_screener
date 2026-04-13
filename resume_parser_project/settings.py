@@ -27,7 +27,7 @@ if not SECRET_KEY: raise ValueError("DJANGO_SECRET_KEY not found in environment 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1','3.80.22.105','ec2-3-80-22-105.compute-1.amazonaws.com','localhost']
+ALLOWED_HOSTS = ['127.0.0.1','3.80.22.105','ec2-3-80-22-105.compute-1.amazonaws.com','localhost',".railway.app"]
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 # Application definition
